@@ -1,0 +1,5 @@
+/unversioned/
+/.idea/
+/venv/
+*.user
+*.pyc
