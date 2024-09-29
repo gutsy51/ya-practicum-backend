@@ -1,5 +1,92 @@
 from gameparts import Board
-from gameparts.exceptions import *
+import pygame
+
+
+pygame.init()
+
+# Constants
+CELL_SIZE = 100
+BOARD_SIZE = 3
+WIDTH = HEIGHT = CELL_SIZE * BOARD_SIZE
+LINE_WIDTH = 15
+BG_COLOR = (28, 170, 156)
+LINE_COLOR = (23, 145, 135)
+X_COLOR = (84, 84, 84)
+O_COLOR = (242, 235, 211)
+X_WIDTH = 15
+O_WIDTH = 15
+SPACE = CELL_SIZE // 4
+
+# Set up the window
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption('Крестики-нолики')
+screen.fill(BG_COLOR)
+
+
+def draw_lines():
+    """Draw the game grid."""
+
+    # Draw horizontal lines.
+    for i in range(1, BOARD_SIZE):
+        pygame.draw.line(
+            screen,
+            LINE_COLOR,
+            (0, i * CELL_SIZE),
+            (WIDTH, i * CELL_SIZE),
+            LINE_WIDTH
+        )
+
+    # Draw vertical lines.
+    for i in range(1, BOARD_SIZE):
+        pygame.draw.line(
+            screen,
+            LINE_COLOR,
+            (i * CELL_SIZE, 0),
+            (i * CELL_SIZE, HEIGHT),
+            LINE_WIDTH
+        )
+
+
+def draw_figures(board):
+    """Draw X and O on the board."""
+
+    for row in range(BOARD_SIZE):
+        for col in range(BOARD_SIZE):
+            if board[row][col] == 'X':
+                pygame.draw.line(
+                    screen,
+                    X_COLOR,
+                    (col * CELL_SIZE + SPACE, row * CELL_SIZE + SPACE),
+                    (
+                        col * CELL_SIZE + CELL_SIZE - SPACE,
+                        row * CELL_SIZE + CELL_SIZE - SPACE
+                    ),
+                    X_WIDTH
+                )
+                pygame.draw.line(
+                    screen,
+                    X_COLOR,
+                    (
+                        col * CELL_SIZE + SPACE,
+                        row * CELL_SIZE + CELL_SIZE - SPACE
+                    ),
+                    (
+                        col * CELL_SIZE + CELL_SIZE - SPACE,
+                        row * CELL_SIZE + SPACE
+                    ),
+                    X_WIDTH
+                )
+            elif board[row][col] == 'O':
+                pygame.draw.circle(
+                    screen,
+                    O_COLOR,
+                    (
+                        col * CELL_SIZE + CELL_SIZE // 2,
+                        row * CELL_SIZE + CELL_SIZE // 2
+                    ),
+                    CELL_SIZE // 2 - SPACE,
+                    O_WIDTH
+                )
 
 
 def save_result(result: str) -> None:
@@ -11,58 +98,41 @@ def save_result(result: str) -> None:
 def main():
     # Init the board.
     game = Board()
-    print(game)
+    draw_lines()
+
     current_player = 'X'
     is_running = True
-    game.display()
-
     while is_running:
-        print(f'< {current_player}\'s turn!')
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                is_running = False
 
-        # Get coords from player with validation.
-        while True:
-            try:
-                # Get coords.
-                row = int(input('Enter the number of the row: '))
-                if row < 0 or row >= game.field_size:
-                    raise FieldIndexError
-                col = int(input('Enter the number of the column: '))
-                if col < 0 or col >= game.field_size:
-                    raise FieldIndexError
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                x, y = event.pos  # Get mouse position
+                row = y // CELL_SIZE
+                col = x // CELL_SIZE
 
-                # Check if cell is occupied.
+                # Check if the cell is occupied. Make move if it's not.
                 if game.board[row][col] != ' ':
-                    raise CellOccupiedError
-            except FieldIndexError:
-                print(
-                    F'Values must be in the range from 0 to {game.field_size}.'
-                )
-                print('Please try again.')
-            except ValueError:
-                print('Value must be an integer. Please try again.')
-            except CellOccupiedError:
-                print('The cell is already occupied. Please try again.')
-            except Exception as e:
-                print(f'Unexpected error: {e}')
-            else:
-                break
+                    continue
+                game.make_move(row, col, current_player)
 
-        # All good. Make the move.
-        game.make_move(row, col, current_player)
-        game.display()
+                # Check if the game is over
+                if game.is_winner(current_player) or game.is_board_full():
+                    if game.is_winner(current_player):
+                        result = f'{current_player} has won!'
+                    else:
+                        result = 'The game is a draw!'
+                    print(result)
+                    save_result(result)
+                    is_running = False
 
-        # Check if the game is over.
-        if game.is_winner(current_player) or game.is_board_full():
-            if game.is_winner(current_player):
-                result = f'{current_player} has won!'
-            else:
-                result = 'The game is a draw!'
-            print(result)
-            save_result(result)
-            is_running = False
+                # Next move.
+                current_player = 'O' if current_player == 'X' else 'X'
+                draw_figures(game.board)
 
-        # Next move.
-        current_player = 'O' if current_player == 'X' else 'X'
+        pygame.display.update()
+    pygame.quit()
 
 
 if __name__ == '__main__':
