@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from django.http import HttpResponseNotFound
 
 
 # Pseudo-database.
@@ -45,6 +46,16 @@ posts = [
     },
 ]
 
+# ID and index mapping
+posts_id = {post['id']: index for index, post in enumerate(posts)}
+
+
+def get_post_by_id(data: list, key: int) -> dict:
+    """Return post by id."""
+    if key not in posts_id:
+        raise ValueError(f'Post with id {key} not found')
+    return data[posts_id[key]]
+
 
 def index(request):
     template = 'blog/index.html'
@@ -52,9 +63,13 @@ def index(request):
     return render(request, template, context)
 
 
-def post_detail(request, pk):
+def post_detail(request, post_id):
     template = 'blog/detail.html'
-    context = {'post': posts[pk]}
+    try:
+        post = get_post_by_id(posts, post_id)
+    except ValueError:
+        return HttpResponseNotFound(f'Post with id {post_id} not found.')
+    context = {'post': post}
     return render(request, template, context)
 
 
@@ -62,6 +77,6 @@ def category_posts(request, category_slug):
     template = 'blog/category.html'
     context = {
         'category': category_slug,
-        'posts': [post for post in posts if post['category'] == category_slug]
+        'posts': reversed([post for post in posts if post['category'] == category_slug])
     }
     return render(request, template, context)
