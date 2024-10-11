@@ -75,8 +75,9 @@ def post_detail(request, post_id):
 
 def category_posts(request, category_slug):
     template = 'blog/category.html'
+    posts_by_slug = [el for el in posts if el['category'] == category_slug]
     context = {
         'category': category_slug,
-        'posts': reversed([post for post in posts if post['category'] == category_slug])
+        'posts': reversed(posts_by_slug)
     }
     return render(request, template, context)
