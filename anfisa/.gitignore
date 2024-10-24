@@ -109,9 +109,6 @@ venv/
 ENV/
 env.bak/
 venv.bak/
-.pdm*
-pdm*
-pyproject.toml
 
 # Spyder project settings
 .spyderproject
@@ -131,33 +128,5 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# IDEs
-.idea/
-
-# yap_testing
-**/aprint.txt
-yap_testing
-**/*solution_for_testing/
-**/task*/user/
-
-# yap_testing webpack
-**/*conftest_joined*
-webpack_tests.report
-
-# ast_testlib
-testlibs
-**/user.py
-
-# databases course block
-**/sqlite_fpath.deleteme
-restore_sqlite.py
-user_precode.py
-db_dump.sql
-
-_tests
-.menuignore
-author/
-precode/
-user/
-
-notion
+#vscode
+.vscode/
