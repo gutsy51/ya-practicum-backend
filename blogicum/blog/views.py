@@ -1,83 +1,74 @@
-from django.shortcuts import render
+from django.db.models import Q
+from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponseNotFound
+from django.utils import timezone
 
-
-# Pseudo-database.
-posts = [
-    {
-        'id': 0,
-        'location': 'Остров отчаянья',
-        'date': '30 сентября 1659 года',
-        'category': 'travel',
-        'text': '''Наш корабль, застигнутый в открытом море
-                страшным штормом, потерпел крушение.
-                Весь экипаж, кроме меня, утонул; я же,
-                несчастный Робинзон Крузо, был выброшен
-                полумёртвым на берег этого проклятого острова,
-                который назвал островом Отчаяния.''',
-    },
-    {
-        'id': 1,
-        'location': 'Остров отчаянья',
-        'date': '1 октября 1659 года',
-        'category': 'not-my-day',
-        'text': '''Проснувшись поутру, я увидел, что наш корабль сняло
-                с мели приливом и пригнало гораздо ближе к берегу.
-                Это подало мне надежду, что, когда ветер стихнет,
-                мне удастся добраться до корабля и запастись едой и
-                другими необходимыми вещами. Я немного приободрился,
-                хотя печаль о погибших товарищах не покидала меня.
-                Мне всё думалось, что, останься мы на корабле, мы
-                непременно спаслись бы. Теперь из его обломков мы могли бы
-                построить баркас, на котором и выбрались бы из этого
-                гиблого места.''',
-    },
-    {
-        'id': 2,
-        'location': 'Остров отчаянья',
-        'date': '25 октября 1659 года',
-        'category': 'not-my-day',
-        'text': '''Всю ночь и весь день шёл дождь и дул сильный
-                порывистый ветер. 25 октября.  Корабль за ночь разбило
-                в щепки; на том месте, где он стоял, торчат какие-то
-                жалкие обломки,  да и те видны только во время отлива.
-                Весь этот день я хлопотал  около вещей: укрывал и
-                укутывал их, чтобы не испортились от дождя.''',
-    },
-]
-
-# ID and index mapping
-posts_id = {post['id']: index for index, post in enumerate(posts)}
-
-
-def get_post_by_id(data: list, key: int) -> dict:
-    """Return post by id."""
-    if key not in posts_id:
-        raise ValueError(f'Post with id {key} not found')
-    return data[posts_id[key]]
+from .models import Post, Category
 
 
 def index(request):
+    """Выводятся пять последних публикаций.
+
+    На главной странице должны показываться только те публикации,
+    у которых одновременно:
+    1. Дата публикации — не позже текущего времени
+    2. Значение поля is_published равно True
+    3. У категории, к которой принадлежит публикация,
+       значение поля is_published равно True.
+    """
     template = 'blog/index.html'
-    context = {'posts': reversed(posts)}
+    post_list = Post.objects.filter(
+        Q(category__is_published__exact=True)
+        & Q(is_published__exact=True)
+        & Q(pub_date__lte=timezone.now())
+    ).order_by('-pub_date')[:5]
+    context = {'post_list': post_list}
     return render(request, template, context)
 
 
 def post_detail(request, post_id):
+    """Выводится отдельная публикация, полученная по первичному ключу.
+
+    Запрос к странице публикации должен вернуть ошибку 404, если:
+    1. Дата публикации — позже текущего времени
+    2. Или значение поля is_published у запрошенной публикации равно False
+    3. Или у категории, к которой принадлежит публикация,
+       значение поля is_published равно False
+    """
     template = 'blog/detail.html'
-    try:
-        post = get_post_by_id(posts, post_id)
-    except ValueError:
+    post = get_object_or_404(Post, pk=post_id)
+    if not (
+        post.pub_date < timezone.now()
+        and post.is_published
+        and post.category.is_published
+    ):
         return HttpResponseNotFound(f'Post with id {post_id} not found.')
     context = {'post': post}
     return render(request, template, context)
 
 
 def category_posts(request, category_slug):
+    """Выводятся публикации выбранной категории.
+
+    Выводятся только те публикации, которые
+    1. Принадлежат выбранной категории
+    2. Значение поля is_published равно True
+    3. Дата публикации — не позже текущего времени.
+    Если у запрошенной категории значение поля is_published равно
+    False — должна возвращаться ошибка 404.
+    """
     template = 'blog/category.html'
-    posts_by_slug = [el for el in posts if el['category'] == category_slug]
+    category = get_object_or_404(Category, slug=category_slug)
+    if not category.is_published:
+        return HttpResponseNotFound(f'Category {category_slug} not found.')
+
+    post_list = Post.objects.filter(
+        Q(category__exact=category)
+        & Q(is_published__exact=True)
+        & Q(pub_date__lte=timezone.now())
+    ).order_by('-pub_date')
     context = {
-        'category': category_slug,
-        'posts': reversed(posts_by_slug)
+        'category': category,
+        'post_list': post_list
     }
     return render(request, template, context)

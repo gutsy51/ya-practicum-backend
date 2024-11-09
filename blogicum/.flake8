@@ -12,7 +12,7 @@ exclude =
     tests/
     */migrations/
     venv/
-    .venv/
     env/
+    .venv/
 per-file-ignores =
   settings.py:E501
