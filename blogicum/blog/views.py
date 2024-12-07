@@ -17,12 +17,12 @@ def index(request):
        значение поля is_published равно True.
     """
     template = 'blog/index.html'
-    post_list = Post.objects.filter(
+    page_obj = Post.objects.filter(
         Q(category__is_published__exact=True)
         & Q(is_published__exact=True)
         & Q(pub_date__lte=timezone.now())
     ).order_by('-pub_date')[:5]
-    context = {'post_list': post_list}
+    context = {'page_obj': page_obj}
     return render(request, template, context)
 
 
@@ -62,13 +62,13 @@ def category_posts(request, category_slug):
     if not category.is_published:
         return HttpResponseNotFound(f'Category {category_slug} not found.')
 
-    post_list = Post.objects.filter(
+    page_obj = Post.objects.filter(
         Q(category__exact=category)
         & Q(is_published__exact=True)
         & Q(pub_date__lte=timezone.now())
     ).order_by('-pub_date')
     context = {
         'category': category,
-        'post_list': post_list
+        'page_obj': page_obj
     }
     return render(request, template, context)
