@@ -19,8 +19,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-s8x#vuhq!6ky6b()_5y9mbiv0td8@@1ui_0&!o#_!acwuxj_^-'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+
+# Redirect to the homepage after login.
+LOGIN_REDIRECT_URL = 'blog:index'
 
 # Application definition.
 INSTALLED_APPS = [
@@ -92,7 +95,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Internationalization.
 LANGUAGE_CODE = 'ru-RU'
-TIME_ZONE = 'UTC+3'
+TIME_ZONE = 'Europe/Moscow'
 USE_I18N = True
 USE_L10N = True
 USE_TZ = True
