@@ -1,4 +1,5 @@
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 
@@ -21,10 +22,14 @@ class ProfileListView(ListView):
 
     def get_queryset(self):
         """Return posts for <username> author."""
-        return self.model.objects.select_related('author').filter(
-            # IDEA: Возможно, стоит добавить фильтры is_published и pub_date
-            author__username=self.kwargs['username'],
-        ).order_by('-pub_date')
+        filters = {'author__username': self.kwargs['username']}
+        if self.request.user.username != self.kwargs['username']:
+            # Hide unpublished posts for other users.
+            filters.update({
+                'is_published__exact': True,
+                'pub_date__lte': timezone.now()
+            })
+        return self.model.objects.select_related('author').filter(**filters).order_by('-pub_date')
 
     def get_context_data(self, **kwargs):
         """Add profile to the context."""

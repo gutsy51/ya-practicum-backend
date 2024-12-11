@@ -1,20 +1,35 @@
-from django.shortcuts import get_object_or_404
+from django.http import Http404
+from django.shortcuts import get_object_or_404, redirect
+from django.urls import reverse
 from django.utils import timezone
-from django.views.generic import ListView, DetailView
+from django.views.generic import (
+    ListView, DetailView, CreateView, UpdateView, DeleteView
+)
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 from blog.models import Post, Category
+from blog.forms import PostForm
 
 
 POSTS_PER_PAGE = 10
 
 
-class PostIndexListView(ListView):
+class PostMixin:
+    """Set default model for post views."""
+    model = Post
+
+
+class PostEditMixin(PostMixin):
+    """Set default template for post-edit views."""
+    template_name = 'blog/create.html'
+
+
+class PostIndexListView(PostMixin, ListView):
     """Show latest POSTS_PER_PAGE posts.
 
     1. Publication date must be earlier than current;
     2. Post & category must be published.
     """
-    model = Post
     template_name = 'blog/index.html'
     paginate_by = POSTS_PER_PAGE
 
@@ -25,14 +40,13 @@ class PostIndexListView(ListView):
         ).order_by('-pub_date')
 
 
-class PostCategoryListView(ListView):
+class PostCategoryListView(PostMixin, ListView):
     """Show latest POSTS_PER_PAGE posts in category.
 
     1. Publication date must be earlier than current;
     2. Post & category must be published.
     3. Posts must belong to selected category.
     """
-    model = Post
     template_name = 'blog/category.html'
     paginate_by = POSTS_PER_PAGE
 
@@ -65,20 +79,75 @@ class PostCategoryListView(ListView):
         return context
 
 
-class PostDetailView(DetailView):
+class PostDetailView(PostMixin, DetailView):
     """Show a single post by ID.
 
     1. Publication date must be earlier than current;
     2. Post & category must be published.
     """
-    model = Post
     template_name = 'blog/detail.html'
 
     def get_object(self, **kwargs):
         """Return Post or Http404 by post ID."""
-        return get_object_or_404(
-            self.model.objects.filter(
-                pub_date__lt=timezone.now(), is_published__exact=True,
-                category__is_published__exact=True, pk=self.kwargs['post_id']
-            )
+        post = get_object_or_404(
+            self.model.objects.filter(pk=self.kwargs['post_id'],
+                                      category__is_published__exact=True)
         )
+
+        # Allow access: user is the author.
+        if post.author == self.request.user:
+            return post
+
+        # Deny access: user is not the author, post isn't published.
+        if not post.is_published or post.pub_date > timezone.now():
+            raise Http404
+
+        # Allow access: user is not the author, post is published.
+        return post
+
+
+class PostCreateView(PostEditMixin, LoginRequiredMixin, CreateView):
+    """Create a new post."""
+    form_class = PostForm
+
+    def form_valid(self, form):
+        """Save model instance."""
+        form.instance.author = self.request.user
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        """Redirect to user's page (blog:profile)."""
+        return reverse("blog:profile", args=[self.request.user])
+
+
+class PostUpdateView(PostEditMixin, LoginRequiredMixin, UpdateView):
+    """Edit an existing post."""
+    form_class = PostForm
+    pk_url_kwarg = 'post_id'
+
+    def dispatch(self, request, *args, **kwargs):
+        """Check if the current user is the author of the post."""
+        if self.get_object().author != request.user:
+            return redirect('blog:post_detail', id=self.kwargs['post_id'])
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_success_url(self):
+        """Redirect to post detail page (blog:post_detail)."""
+        return reverse(
+            'blog:post_detail', kwargs={'post_id': self.kwargs['post_id']}
+        )
+
+
+class PostDeleteView(PostEditMixin, LoginRequiredMixin, DeleteView):
+    """Delete an existing post."""
+    pk_url_kwarg = 'post_id'
+
+    def dispatch(self, request, *args, **kwargs):
+        """Check if the current user is the author of the post."""
+        if self.get_object().author != request.user:
+            return redirect('blog:post_detail', id=self.kwargs['post_id'])
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_success_url(self):
+        """Redirect to user's page (blog:profile)."""
+        return reverse('blog:profile', args=[self.request.user])

@@ -1,5 +1,6 @@
 from .posts import (
-    PostIndexListView, PostCategoryListView, PostDetailView
+    PostIndexListView, PostCategoryListView, PostDetailView,
+    PostCreateView, PostUpdateView, PostDeleteView
 )
 from .profiles import (
     ProfileListView, ProfileUpdateView
@@ -8,5 +9,7 @@ from .profiles import (
 
 __all__ = [
     PostIndexListView, PostCategoryListView, PostDetailView,
+    PostCreateView, PostUpdateView, PostDeleteView,
+
     ProfileListView, ProfileUpdateView
 ]
