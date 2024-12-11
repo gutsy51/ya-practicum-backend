@@ -38,6 +38,10 @@ class Post(PublishedModel):
         'Category', verbose_name='Категория',
         on_delete=models.SET_NULL, null=True
     )
+    image = models.ImageField(
+        verbose_name='Изображение', upload_to='post_images/',
+        null=True, blank=True
+    )
 
     class Meta:
         verbose_name = 'публикация'
@@ -57,6 +61,9 @@ class Category(PublishedModel):
         verbose_name = 'категория'
         verbose_name_plural = 'Категории'
 
+    def __str__(self):
+        return self.title
+
 
 class Location(PublishedModel):
     name = models.CharField(verbose_name='Название места', max_length=256)
@@ -64,3 +71,6 @@ class Location(PublishedModel):
     class Meta:
         verbose_name = 'местоположение'
         verbose_name_plural = 'Местоположения'
+
+    def __str__(self):
+        return self.name

@@ -25,6 +25,10 @@ ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 # Redirect to the homepage after login.
 LOGIN_REDIRECT_URL = 'blog:index'
 
+# Media files.
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media/'
+
 # Application definition.
 INSTALLED_APPS = [
     'blog',
