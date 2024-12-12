@@ -90,7 +90,10 @@ class Comment(models.Model):
         verbose_name='Автор комментария',
         on_delete=models.CASCADE
     )
-    created_at = models.DateTimeField(verbose_name='Добавлено', auto_now_add=True)
+    created_at = models.DateTimeField(
+        verbose_name='Добавлено',
+        auto_now_add=True
+    )
 
     class Meta:
         verbose_name = 'комментарий'
