@@ -41,6 +41,9 @@ class CommentCreateView(CommentMixin, CreateView):
         return super().form_valid(form)
 
 
+# Could've used a mixin for CommentDeleteView and CommentUpdateView,
+# but checking for the existence of the required methods, objects and args
+# to ensure security would be overly complicated.
 class CommentUpdateView(CommentMixin, UpdateView):
     """Edit an existing comment text."""
     form_class = CommentForm
@@ -53,6 +56,12 @@ class CommentUpdateView(CommentMixin, UpdateView):
             return redirect('blog:post_detail', id=self.kwargs['post_id'])
         return super().dispatch(request, *args, **kwargs)
 
+    def get_context_data(self, **kwargs):
+        """Add comment to the context."""
+        context = super().get_context_data(**kwargs)
+        context['comment'] = self.get_object()
+        return context
+
 
 class CommentDeleteView(CommentMixin, DeleteView):
     """Delete an existing comment."""
@@ -64,3 +73,9 @@ class CommentDeleteView(CommentMixin, DeleteView):
         if self._post.author != request.user:
             return redirect('blog:post_detail', id=self.kwargs['post_id'])
         return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        """Add comment to the context."""
+        context = super().get_context_data(**kwargs)
+        context['comment'] = self.get_object()
+        return context

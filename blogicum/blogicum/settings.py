@@ -29,6 +29,10 @@ LOGIN_REDIRECT_URL = 'blog:index'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media/'
 
+# E-mail settings.
+EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
+EMAIL_FILE_PATH = BASE_DIR / 'sent_emails/'
+
 # Application definition.
 INSTALLED_APPS = [
     'blog',

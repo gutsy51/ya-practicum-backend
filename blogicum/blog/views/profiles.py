@@ -1,3 +1,4 @@
+from django.db.models import Count
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.contrib.auth import get_user_model
@@ -30,7 +31,8 @@ class ProfileListView(ListView):
                 'pub_date__lte': timezone.now()
             })
         return (self.model.objects.select_related('author')
-                .filter(**filters).order_by('-pub_date'))
+                .filter(**filters).order_by('-pub_date')
+                .annotate(comment_count=Count("comment")))
 
     def get_context_data(self, **kwargs):
         """Add profile to the context."""
