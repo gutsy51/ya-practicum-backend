@@ -11,6 +11,7 @@ from blog.forms import CommentForm
 
 class CommentMixin(LoginRequiredMixin):
     """Set default model and template for comment views."""
+
     model = Comment
     template_name = 'blog/comment.html'
     _post = None
@@ -22,6 +23,7 @@ class CommentMixin(LoginRequiredMixin):
 
 class CommentCreateView(CommentMixin, CreateView):
     """Create comment."""
+
     form_class = CommentForm
 
     def dispatch(self, request, *args, **kwargs):
@@ -46,6 +48,7 @@ class CommentCreateView(CommentMixin, CreateView):
 # to ensure security would be overly complicated.
 class CommentUpdateView(CommentMixin, UpdateView):
     """Edit an existing comment text."""
+
     form_class = CommentForm
     pk_url_kwarg = 'comment_id'
 
@@ -56,15 +59,10 @@ class CommentUpdateView(CommentMixin, UpdateView):
             return redirect('blog:post_detail', id=self.kwargs['post_id'])
         return super().dispatch(request, *args, **kwargs)
 
-    def get_context_data(self, **kwargs):
-        """Add comment to the context."""
-        context = super().get_context_data(**kwargs)
-        context['comment'] = self.get_object()
-        return context
-
 
 class CommentDeleteView(CommentMixin, DeleteView):
     """Delete an existing comment."""
+
     pk_url_kwarg = 'comment_id'
 
     def dispatch(self, request, *args, **kwargs):
@@ -73,9 +71,3 @@ class CommentDeleteView(CommentMixin, DeleteView):
         if self._post.author != request.user:
             return redirect('blog:post_detail', id=self.kwargs['post_id'])
         return super().dispatch(request, *args, **kwargs)
-
-    def get_context_data(self, **kwargs):
-        """Add comment to the context."""
-        context = super().get_context_data(**kwargs)
-        context['comment'] = self.get_object()
-        return context

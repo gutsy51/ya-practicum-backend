@@ -11,17 +11,18 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from blog.models import Post, Category
 from blog.forms import PostForm, CommentForm
 
-
 POSTS_PER_PAGE = 10
 
 
 class PostMixin:
     """Set default model for post views."""
+
     model = Post
 
 
 class PostEditMixin(PostMixin):
     """Set default template for post-edit views."""
+
     template_name = 'blog/create.html'
 
 
@@ -31,6 +32,7 @@ class PostIndexListView(PostMixin, ListView):
     1. Publication date must be earlier than current;
     2. Post & category must be published.
     """
+
     template_name = 'blog/index.html'
     paginate_by = POSTS_PER_PAGE
 
@@ -50,6 +52,7 @@ class PostCategoryListView(PostMixin, ListView):
     2. Post & category must be published.
     3. Posts must belong to selected category.
     """
+
     template_name = 'blog/category.html'
     paginate_by = POSTS_PER_PAGE
     _category = None
@@ -85,6 +88,7 @@ class PostDetailView(PostMixin, DetailView):
     1. Publication date must be earlier than current;
     2. Post & category must be published.
     """
+
     template_name = 'blog/detail.html'
 
     def get_object(self, **kwargs):
@@ -115,6 +119,7 @@ class PostDetailView(PostMixin, DetailView):
 
 class PostCreateView(PostEditMixin, LoginRequiredMixin, CreateView):
     """Create a new post."""
+
     form_class = PostForm
 
     def form_valid(self, form):
@@ -129,6 +134,7 @@ class PostCreateView(PostEditMixin, LoginRequiredMixin, CreateView):
 
 class PostUpdateView(PostEditMixin, LoginRequiredMixin, UpdateView):
     """Edit an existing post."""
+
     form_class = PostForm
     pk_url_kwarg = 'post_id'
 
@@ -147,6 +153,7 @@ class PostUpdateView(PostEditMixin, LoginRequiredMixin, UpdateView):
 
 class PostDeleteView(PostEditMixin, LoginRequiredMixin, DeleteView):
     """Delete an existing post."""
+
     pk_url_kwarg = 'post_id'
 
     def dispatch(self, request, *args, **kwargs):

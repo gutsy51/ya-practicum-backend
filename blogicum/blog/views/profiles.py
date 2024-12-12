@@ -11,12 +11,12 @@ from blog.models import Post
 from blog.views.posts import POSTS_PER_PAGE
 from blog.forms import ProfileEditForm
 
-
 User = get_user_model()
 
 
 class ProfileListView(ListView):
     """Show user's page with posts."""
+
     model = Post
     paginate_by = POSTS_PER_PAGE  # Defined in 'blog/views/posts.py'
     template_name = 'blog/profile.html'
@@ -45,6 +45,7 @@ class ProfileListView(ListView):
 
 class ProfileUpdateView(LoginRequiredMixin, UpdateView):
     """Show user data editing form."""
+
     template_name = 'blog/user.html'
     form_class = ProfileEditForm
 
