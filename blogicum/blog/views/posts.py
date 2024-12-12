@@ -1,3 +1,4 @@
+from django.db.models import Count
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
@@ -8,7 +9,7 @@ from django.views.generic import (
 from django.contrib.auth.mixins import LoginRequiredMixin
 
 from blog.models import Post, Category
-from blog.forms import PostForm
+from blog.forms import PostForm, CommentForm
 
 
 POSTS_PER_PAGE = 10
@@ -37,7 +38,9 @@ class PostIndexListView(PostMixin, ListView):
         return self.model.objects.filter(
             category__is_published__exact=True, is_published__exact=True,
             pub_date__lte=timezone.now()
-        ).order_by('-pub_date')
+        ).order_by(
+            '-pub_date'
+        ).annotate(comment_count=Count("comment"))
 
 
 class PostCategoryListView(PostMixin, ListView):
@@ -49,10 +52,7 @@ class PostCategoryListView(PostMixin, ListView):
     """
     template_name = 'blog/category.html'
     paginate_by = POSTS_PER_PAGE
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self._category = None
+    _category = None
 
     def get_category(self) -> Category:
         """Fetch and cache the category object."""
@@ -70,7 +70,7 @@ class PostCategoryListView(PostMixin, ListView):
         return self.model.objects.filter(
             category__exact=category,
             is_published__exact=True, pub_date__lte=timezone.now()
-        ).order_by('-pub_date')
+        ).order_by('-pub_date').annotate(comment_count=Count("comment"))
 
     def get_context_data(self, **kwargs):
         """Add category to the context."""
@@ -104,6 +104,13 @@ class PostDetailView(PostMixin, DetailView):
 
         # Allow access: user is not the author, post is published.
         return post
+
+    def get_context_data(self, **kwargs):
+        """Add form and comments to the context."""
+        context = super().get_context_data(**kwargs)
+        context['form'] = CommentForm()
+        context['comments'] = self.object.comment.select_related('author')
+        return context
 
 
 class PostCreateView(PostEditMixin, LoginRequiredMixin, CreateView):
@@ -149,5 +156,5 @@ class PostDeleteView(PostEditMixin, LoginRequiredMixin, DeleteView):
         return super().dispatch(request, *args, **kwargs)
 
     def get_success_url(self):
-        """Redirect to user's page (blog:profile)."""
+        """Return user's page (blog:profile)."""
         return reverse('blog:profile', args=[self.request.user])

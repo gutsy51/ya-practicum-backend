@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth import get_user_model
 
-from blog.models import Post
+from blog.models import Post, Comment
 
 User = get_user_model()
 
@@ -26,3 +26,11 @@ class ProfileEditForm(forms.ModelForm):
     class Meta:
         model = User
         fields = ('first_name', 'last_name', 'username', 'email')
+
+
+class CommentForm(forms.ModelForm):
+    """Create/edit comment form."""
+
+    class Meta:
+        model = Comment
+        fields = ('text', )

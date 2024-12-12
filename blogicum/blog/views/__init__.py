@@ -5,7 +5,9 @@ from .posts import (
 from .profiles import (
     ProfileListView, ProfileUpdateView
 )
-
+from .comments import (
+    CommentCreateView, CommentUpdateView, CommentDeleteView
+)
 
 __all__ = [
     PostIndexListView, PostCategoryListView, PostDetailView,
