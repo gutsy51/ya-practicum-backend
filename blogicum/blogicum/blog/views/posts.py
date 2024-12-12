@@ -94,8 +94,7 @@ class PostDetailView(PostMixin, DetailView):
     def get_object(self, **kwargs):
         """Return Post or Http404 by post ID."""
         post = get_object_or_404(
-            self.model.objects.filter(pk=self.kwargs['post_id'],
-                                      category__is_published__exact=True)
+            self.model.objects.filter(pk=self.kwargs['post_id'])
         )
 
         # Allow access: user is the author.
@@ -103,7 +102,10 @@ class PostDetailView(PostMixin, DetailView):
             return post
 
         # Deny access: user is not the author, post isn't published.
-        if not post.is_published or post.pub_date > timezone.now():
+        is_denied = (not post.is_published
+                     or post.pub_date > timezone.now()
+                     or not post.category.is_published)
+        if is_denied:
             raise Http404
 
         # Allow access: user is not the author, post is published.
@@ -141,7 +143,7 @@ class PostUpdateView(PostEditMixin, LoginRequiredMixin, UpdateView):
     def dispatch(self, request, *args, **kwargs):
         """Check if the current user is the author of the post."""
         if self.get_object().author != request.user:
-            return redirect('blog:post_detail', id=self.kwargs['post_id'])
+            return redirect('blog:post_detail', post_id=self.kwargs['post_id'])
         return super().dispatch(request, *args, **kwargs)
 
     def get_success_url(self):
@@ -159,8 +161,14 @@ class PostDeleteView(PostEditMixin, LoginRequiredMixin, DeleteView):
     def dispatch(self, request, *args, **kwargs):
         """Check if the current user is the author of the post."""
         if self.get_object().author != request.user:
-            return redirect('blog:post_detail', id=self.kwargs['post_id'])
+            return redirect('blog:post_detail', post_id=self.kwargs['post_id'])
         return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        """Add form to the context."""
+        context = super().get_context_data(**kwargs)
+        context["form"] = PostForm(instance=self.object)
+        return context
 
     def get_success_url(self):
         """Return user's page (blog:profile)."""

@@ -2,7 +2,7 @@ from django.shortcuts import get_object_or_404, redirect
 from django.utils import timezone
 from django.urls import reverse
 
-from django.views.generic import CreateView, UpdateView, DeleteView
+from django.views.generic import CreateView, UpdateView, DeleteView, View
 from django.contrib.auth.mixins import LoginRequiredMixin
 
 from blog.models import Post, Comment
@@ -14,17 +14,13 @@ class CommentMixin(LoginRequiredMixin):
 
     model = Comment
     template_name = 'blog/comment.html'
-    _post = None
-
-    def get_success_url(self):
-        """Return post detail page (blog:post_detail)."""
-        return reverse('blog:post_detail', kwargs={'post_id': self._post.pk})
 
 
 class CommentCreateView(CommentMixin, CreateView):
     """Create comment."""
 
     form_class = CommentForm
+    _post = None
 
     def dispatch(self, request, *args, **kwargs):
         """Get post object or 404."""
@@ -42,32 +38,35 @@ class CommentCreateView(CommentMixin, CreateView):
         form.instance.post = self._post
         return super().form_valid(form)
 
+    def get_success_url(self):
+        """Return post detail page (blog:post_detail)."""
+        return reverse('blog:post_detail', kwargs={'post_id': self._post.pk})
 
-# Could've used a mixin for CommentDeleteView and CommentUpdateView,
-# but checking for the existence of the required methods, objects and args
-# to ensure security would be overly complicated.
-class CommentUpdateView(CommentMixin, UpdateView):
+
+class CommentUpdDelMixin(CommentMixin, View):
+    """Mixin for comment update and delete views."""
+
+    pk_url_kwarg = 'comment_id'
+
+    def dispatch(self, request, *args, **kwargs):
+        """Check if the current user is the author of the comment."""
+        comment = get_object_or_404(Comment, pk=kwargs['comment_id'])
+        if comment.author != request.user:
+            return redirect('blog:post_detail', post_id=self.kwargs['post_id'])
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_success_url(self):
+        return reverse("blog:post_detail",
+                       kwargs={'post_id': self.kwargs['post_id']})
+
+
+class CommentUpdateView(CommentUpdDelMixin, UpdateView):
     """Edit an existing comment text."""
 
     form_class = CommentForm
-    pk_url_kwarg = 'comment_id'
-
-    def dispatch(self, request, *args, **kwargs):
-        """Check if the current user is the author of the comment."""
-        self._post = self.get_object().post
-        if self._post.author != request.user:
-            return redirect('blog:post_detail', id=self.kwargs['post_id'])
-        return super().dispatch(request, *args, **kwargs)
 
 
-class CommentDeleteView(CommentMixin, DeleteView):
+class CommentDeleteView(CommentUpdDelMixin, DeleteView):
     """Delete an existing comment."""
 
-    pk_url_kwarg = 'comment_id'
-
-    def dispatch(self, request, *args, **kwargs):
-        """Check if the current user is the author of the comment."""
-        self._post = self.get_object().post
-        if self._post.author != request.user:
-            return redirect('blog:post_detail', id=self.kwargs['post_id'])
-        return super().dispatch(request, *args, **kwargs)
+    pass
