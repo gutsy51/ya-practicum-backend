@@ -8,6 +8,7 @@ User = get_user_model()
 
 def get_truncated_span_from_text(text):
     """Return truncated text with tooltip for the admin panel."""
+
     truncated = Truncator(text).chars(64)
     span = '<span title="{}">{}</span>'
     return format_html(span, text, truncated)
