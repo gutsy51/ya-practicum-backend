@@ -1,5 +1,4 @@
 from django.urls import include, path
-from rest_framework.authtoken import views
 from rest_framework.routers import SimpleRouter
 
 from api.views import PostViewSet, GroupViewSet, CommentViewSet
@@ -13,6 +12,7 @@ router.register(
 )
 
 urlpatterns = [
-    path('api-token-auth/', views.obtain_auth_token),
     path('', include(router.urls)),
+    path('', include('djoser.urls')),
+    path('', include('djoser.urls.jwt')),
 ]
