@@ -5,4 +5,5 @@
 - `/anfisa/` - Blog site about ice cream;
 - `/blogicum/` - Site for publishing articles;
 - `/kittybot/` - Telegram-bot sending photos of cats;
-- `/api_yatube/` - 
+- `/api_yatube/` - First version of the API service for Yatube (Post/Group).
+- `/api_yatube2/` - Second version of the API service for Yatube (V1+Comment/Follow).
