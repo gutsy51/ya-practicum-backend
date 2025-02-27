@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Group, Post, Comment
+from .models import Group, Post, Comment, Follow
 
 admin.site.empty_value_display = '-'
 
@@ -61,3 +61,14 @@ class CommentAdmin(admin.ModelAdmin):
     list_filter = ('created', 'author', 'post',)
     search_fields = ('text',)
     list_display_links = ('short_text',)
+
+
+@admin.register(Follow)
+class FollowAdmin(admin.ModelAdmin):
+    list_display = (
+        'pk',
+        'user',
+        'following',
+    )
+    list_filter = ('user', 'following',)
+    list_display_links = ('user', 'following')

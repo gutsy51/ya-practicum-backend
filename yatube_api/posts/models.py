@@ -45,7 +45,7 @@ class Post(models.Model):
     Columns:
         text - Text;
         author - FK(User), delete cascade, related name = 'posts';
-        group - FK(Group), delete cascade, related name = 'posts';
+        group - FK(Group), delete cascade, related name = 'posts', null, blank;
         image - Image, folder = 'posts/', null, blank;
         pub_date - DateTime, auto_now_add.
     """
@@ -57,7 +57,8 @@ class Post(models.Model):
     )
     group = models.ForeignKey(
         Group, verbose_name='Группа',
-        on_delete=models.CASCADE, related_name='posts'
+        on_delete=models.CASCADE, related_name='posts',
+        null=True, blank=True
     )
     image = models.ImageField(
         verbose_name='Фотография', upload_to='posts/',
@@ -125,7 +126,7 @@ class Follow(models.Model):
         following - FK(User), delete cascade, related name = 'following'.
     """
 
-    follower = models.ForeignKey(
+    user = models.ForeignKey(
         User, verbose_name='Подписчик',
         on_delete=models.CASCADE, related_name='follower'
     )
@@ -139,7 +140,8 @@ class Follow(models.Model):
         verbose_name_plural = 'Подписки'
         constraints = [
             models.UniqueConstraint(
-                fields=['follower', 'following'],
+                fields=['user', 'following'],
                 name='unique_follow'
             ),
         ]
+        # TODO: Добавить user==following constraint
