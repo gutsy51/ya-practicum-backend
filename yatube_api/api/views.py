@@ -10,18 +10,12 @@ from posts.models import Group, Post, Follow
 
 from api.serializers import (PostSerializer, GroupSerializer,
                              CommentSerializer, FollowSerializer)
-from api.permissions import IsAdminOrReadOnly, IsObjectAuthorOrReadOnly
+from api.permissions import IsObjectAuthorOrReadOnly
 
 
 class GroupViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
-
-    # I'm not sure that I correctly understood what a Group is in this task,
-    # Therefore, I will describe my vision:
-    # Groups are communities/categories of posts created/modified only by the admins, so,
-    # only they should've access to the group editing, and any other user should be able to read.
-    permission_classes = (IsAdminOrReadOnly,)
 
 
 class PostViewSet(viewsets.ModelViewSet):
